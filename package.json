@@ -9,5 +9,8 @@
     "test": "cd backend && npm test",
     "seed": "cd backend && npm run seed",
     "setup": "cd backend && npm install && npx prisma db push && npm run seed && cd ../frontend && npm install"
+  },
+  "devDependencies": {
+    "vercel": "^62.2.0"
   }
 }
