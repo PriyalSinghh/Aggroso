@@ -1,0 +1,15 @@
+node_modules
+dist
+backend/dist
+frontend/dist
+backend/frontend-dist
+.env
+.env.local
+backend/.env
+frontend/.env
+*.log
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/prisma/*.db
+backend/prisma/*.db-journal
+.DS_Store

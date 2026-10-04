@@ -1,0 +1,90 @@
+// Prisma schema for Field Service Dispatch and Replanning System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Technician {
+  id                  String       @id
+  name                String
+  skills              String       // Comma-separated skills e.g. "Electrical,HVAC"
+  region              String       // Region e.g. "North", "South", "East", "West"
+  availabilityStart   String       // e.g. "08:00"
+  availabilityEnd     String       // e.g. "17:00"
+  maxWorkloadMinutes  Int          @default(480)
+  status              String       @default("AVAILABLE") // "AVAILABLE" | "CANCELLED"
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  assignments         Assignment[]
+}
+
+model ServiceRequest {
+  id                       String       @id
+  title                    String
+  description              String
+  region                   String       // "North", "South", "East", "West"
+  requiredSkill            String       // "Electrical", "Plumbing", "HVAC", "Appliance"
+  priority                 String       @default("MEDIUM") // "LOW", "MEDIUM", "HIGH", "CRITICAL"
+  estimatedDurationMinutes Int
+  preferredStartTime       String       // e.g. "09:00"
+  preferredEndTime         String       // e.g. "12:00"
+  status                   String       @default("UNASSIGNED") // "UNASSIGNED", "ASSIGNED", "COMPLETED", "CANCELLED"
+  isEmergency              Boolean      @default(false)
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+  assignments              Assignment[]
+}
+
+model ScheduleVersion {
+  id            String       @id @default(uuid())
+  versionNumber Int
+  status        String       @default("DRAFT") // "DRAFT", "APPROVED", "SUPERSEDED"
+  trigger       String       // "INITIAL_PLAN", "TECHNICIAN_CANCELLATION", "EMERGENCY_REQUEST", "MANUAL_EDIT", "REPLAN"
+  createdAt     DateTime     @default(now())
+  createdBy     String       @default("Dispatcher")
+  metadata      String?      // JSON string for tradeoffs, unassigned summary, AI explanations
+  assignments   Assignment[]
+}
+
+model Assignment {
+  id                String          @id @default(uuid())
+  scheduleVersionId String
+  scheduleVersion   ScheduleVersion @relation(fields: [scheduleVersionId], references: [id], onDelete: Cascade)
+  requestId         String
+  serviceRequest    ServiceRequest  @relation(fields: [requestId], references: [id])
+  technicianId      String
+  technician        Technician      @relation(fields: [technicianId], references: [id])
+  startTime         String          // e.g. "09:00"
+  endTime           String          // e.g. "11:00"
+  status            String          @default("SCHEDULED") // "SCHEDULED", "COMPLETED", "CANCELLED"
+  source            String          @default("AI") // "AI", "MANUAL", "DETERMINISTIC"
+  reasoning         String?
+  createdAt         DateTime        @default(now())
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  action        String
+  entityType    String
+  entityId      String
+  previousValue String?  // JSON string
+  newValue      String?  // JSON string
+  reason        String?
+  createdAt     DateTime @default(now())
+  actor         String   @default("Dispatcher")
+}
+
+model Notification {
+  id            String   @id @default(uuid())
+  assignmentId  String?
+  recipientType String   // "TECHNICIAN", "CUSTOMER", "DISPATCHER"
+  recipientId   String   // e.g. "T1" or Customer Phone/ID
+  message       String
+  status        String   @default("SENT") // "SENT", "PENDING", "READ"
+  createdAt     DateTime @default(now())
+}
