@@ -48,6 +48,7 @@ COPY backend/package*.json ./
 RUN npm ci
 
 COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/src ./src
 COPY --from=builder /app/backend/prisma ./prisma
 COPY --from=builder /app/backend/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/backend/node_modules/@prisma ./node_modules/@prisma

@@ -1,5 +1,5 @@
-import { runDatabaseSeed } from '../src/services/seedService.js';
-import { prisma } from '../src/db/prisma.js';
+import { runDatabaseSeed } from '../src/services/seedService.ts';
+import { prisma } from '../src/db/prisma.ts';
 
 export const seed = runDatabaseSeed;
 
