@@ -45,7 +45,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 
 # Copy backend dependencies and build
 COPY backend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/prisma ./prisma
