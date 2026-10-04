@@ -1,0 +1,90 @@
+// Prisma schema for production deployments using PostgreSQL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Technician {
+  id                  String       @id
+  name                String
+  skills              String
+  region              String
+  availabilityStart   String
+  availabilityEnd     String
+  maxWorkloadMinutes  Int          @default(480)
+  status              String       @default("AVAILABLE")
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  assignments         Assignment[]
+}
+
+model ServiceRequest {
+  id                       String       @id
+  title                    String
+  description              String
+  region                   String
+  requiredSkill            String
+  priority                 String       @default("MEDIUM")
+  estimatedDurationMinutes Int
+  preferredStartTime       String
+  preferredEndTime         String
+  status                   String       @default("UNASSIGNED")
+  isEmergency              Boolean      @default(false)
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+  assignments              Assignment[]
+}
+
+model ScheduleVersion {
+  id            String       @id @default(uuid())
+  versionNumber Int
+  status        String       @default("DRAFT")
+  trigger       String
+  createdAt     DateTime     @default(now())
+  createdBy     String       @default("Dispatcher")
+  metadata      String?
+  assignments   Assignment[]
+}
+
+model Assignment {
+  id                String          @id @default(uuid())
+  scheduleVersionId String
+  scheduleVersion   ScheduleVersion @relation(fields: [scheduleVersionId], references: [id], onDelete: Cascade)
+  requestId         String
+  serviceRequest    ServiceRequest  @relation(fields: [requestId], references: [id])
+  technicianId      String
+  technician        Technician      @relation(fields: [technicianId], references: [id])
+  startTime         String
+  endTime           String
+  status            String          @default("SCHEDULED")
+  source            String          @default("AI")
+  reasoning         String?
+  createdAt         DateTime        @default(now())
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  action        String
+  entityType    String
+  entityId      String
+  previousValue String?
+  newValue      String?
+  reason        String?
+  createdAt     DateTime @default(now())
+  actor         String   @default("Dispatcher")
+}
+
+model Notification {
+  id            String   @id @default(uuid())
+  assignmentId  String?
+  recipientType String
+  recipientId   String
+  message       String
+  status        String   @default("SENT")
+  createdAt     DateTime @default(now())
+}

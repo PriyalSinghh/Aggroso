@@ -83,7 +83,7 @@ $$\mathbf{AI\ Optimization\ Proposal} \longrightarrow \mathbf{Deterministic\ Val
 
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, React Router v6, Lucide React Icons.
 - **Backend**: Node.js 22, TypeScript, Express.
-- **Database & ORM**: Prisma ORM with SQLite default (zero-configuration local setup) and PostgreSQL support.
+- **Database & ORM**: Prisma ORM with SQLite for local development and PostgreSQL required for production deployments.
 - **AI Abstraction**: OpenAI-compatible LLM abstraction with deterministic fallback logic.
 - **Testing**: Vitest, Supertest, React Testing Library.
 
@@ -110,11 +110,10 @@ Copy `.env.example` to `.env` in `backend/`:
 ```bash
 cp .env.example backend/.env
 ```
-*(If no OpenAI key is set, the system seamlessly uses its built-in fallback reasoning engine).*
-
-### Step 3: Run Development Servers
-In separate terminal tabs:
-
+For production deployments, set a PostgreSQL connection string instead of the default SQLite value:
+```bash
+DATABASE_URL="postgresql://aggroso:aggroso@localhost:5432/aggroso"
+```
 ```bash
 # Terminal 1: Backend (port 5001)
 npm run dev:backend
@@ -161,16 +160,16 @@ Access the application at `http://localhost:5001`.
 2. Set Environment Variables:
    - `NODE_ENV=production`
    - `PORT=5001`
-   - `DATABASE_URL=file:./dev.db` (or PostgreSQL URL)
+   - `DATABASE_URL=postgresql://user:password@host:5432/aggroso`
 3. Set Build Command:
    ```bash
-   npm run build
+   cd backend && npm install && npx prisma generate --schema=prisma/schema.postgresql.prisma && npm run build
    ```
 4. Set Start Command:
    ```bash
-   cd backend && npx prisma db push && npm run seed && node dist/server.js
+   cd backend && npx prisma db push --schema=prisma/schema.postgresql.prisma && npm run seed && npm start
    ```
-*In production, the backend Express server automatically serves the compiled static frontend from `frontend-dist/`.*
+*SQLite is only valid for local development; production environments must use PostgreSQL and the PostgreSQL Prisma schema.*
 
 ### Option C: Split Deployment (Vercel Frontend + Render/Railway Backend)
 1. **Frontend (Vercel)**:
@@ -179,8 +178,8 @@ Access the application at `http://localhost:5001`.
    - Set environment variable: `VITE_API_BASE_URL=https://your-backend.onrender.com/api`
 2. **Backend (Render / Railway)**:
    - Root directory: `backend`
-   - Build command: `npx prisma generate && npm run build`
-   - Start command: `npx prisma db push && npm run seed && npm start`
+   - Build command: `npx prisma generate --schema=prisma/schema.postgresql.prisma && npm run build`
+   - Start command: `npx prisma db push --schema=prisma/schema.postgresql.prisma && npm run seed && npm start`
 
 ---
 

@@ -50,5 +50,5 @@ COPY --from=builder /app/frontend/dist ./frontend-dist
 # Expose server port
 EXPOSE 5001
 
-# Run database push, seed, and start server
-CMD ["sh", "-c", "npx prisma db push && node dist/server.js"]
+# Run database push against the Postgres schema and start the server
+CMD ["sh", "-c", "npx prisma generate --schema=prisma/schema.postgresql.prisma && npx prisma db push --schema=prisma/schema.postgresql.prisma && node dist/server.js"]

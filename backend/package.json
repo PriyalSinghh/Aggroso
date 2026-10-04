@@ -9,8 +9,10 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
+    "prisma:generate:prod": "prisma generate --schema=prisma/schema.postgresql.prisma",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:push": "prisma db push",
+    "prisma:push:prod": "prisma db push --schema=prisma/schema.postgresql.prisma",
     "seed": "tsx prisma/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest"
