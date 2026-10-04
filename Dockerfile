@@ -1,7 +1,10 @@
 # Multi-stage production build for Aggroso Field Service Dispatch System
-FROM node:22-alpine AS builder
+FROM node:22-bookworm-slim AS builder
 
 WORKDIR /app
+
+# Install Prisma-compatible OpenSSL runtime libraries
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Copy root and workspace package definitions
 COPY package*.json ./
@@ -22,7 +25,7 @@ COPY frontend ./frontend
 
 # Generate Prisma client and build backend
 WORKDIR /app/backend
-RUN npx prisma generate
+RUN npx prisma generate --schema=prisma/schema.postgresql.prisma
 RUN npm run build
 
 # Build frontend
@@ -30,12 +33,15 @@ WORKDIR /app/frontend
 RUN npm run build
 
 # Stage 2: Production runner
-FROM node:22-alpine AS runner
+FROM node:22-bookworm-slim AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=5001
+
+# Install runtime OpenSSL libraries required by Prisma on deploy targets
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Copy backend dependencies and build
 COPY backend/package*.json ./
@@ -51,4 +57,4 @@ COPY --from=builder /app/frontend/dist ./frontend-dist
 EXPOSE 5001
 
 # Run database push against the Postgres schema and start the server
-CMD ["sh", "-c", "npx prisma generate --schema=prisma/schema.postgresql.prisma && npx prisma db push --schema=prisma/schema.postgresql.prisma && node dist/server.js"]
+CMD ["sh", "-c", "npx prisma generate --schema=prisma/schema.postgresql.prisma && npx prisma db push --schema=prisma/schema.postgresql.prisma && npm run seed && node dist/server.js"]
